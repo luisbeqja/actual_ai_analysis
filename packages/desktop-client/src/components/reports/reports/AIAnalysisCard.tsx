@@ -5,6 +5,7 @@ import { View } from '@actual-app/components/view';
 
 import { type AIAnalysisWidget } from 'loot-core/types/models';
 
+import { useNavigate } from '../../../hooks/useNavigate';
 import { ReportCard } from '../ReportCard';
 
 type AIAnalysisCardProps = {
@@ -23,6 +24,13 @@ export function AIAnalysisCard({
   onRemove,
 }: AIAnalysisCardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const onCardClick = () => {
+    if (!isEditing) {
+      navigate(`/reports/ai-analysis/${widgetId}`);
+    }
+  };
 
   return (
     <ReportCard
@@ -42,8 +50,9 @@ export function AIAnalysisCard({
           onRemove();
         }
       }}
+      to={isEditing ? undefined : `/reports/ai-analysis/${widgetId}`}
     >
-      <View style={{ padding: 15 }}>
+      <View style={{ padding: 15, cursor: isEditing ? 'default' : 'pointer' }}>
         <h3>{meta?.name || t('AI Analysis')}</h3>
         <p>{t('AI Analysis feature coming soon!')}</p>
       </View>
