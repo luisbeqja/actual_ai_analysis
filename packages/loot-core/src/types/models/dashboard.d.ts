@@ -61,13 +61,34 @@ export type MarkdownWidget = AbstractWidget<
   { content: string; text_align?: 'left' | 'right' | 'center' }
 >;
 
+export type CalendarWidget = AbstractWidget<
+  'calendar-card',
+  {
+    name?: string;
+    conditions?: RuleConditionEntity[];
+    conditionsOp?: 'and' | 'or';
+    timeFrame?: TimeFrame;
+  } | null
+>;
+
+export type AIAnalysisWidget = AbstractWidget<
+  'ai_analysis-card',
+  {
+    name?: string;
+    conditions?: RuleConditionEntity[];
+    conditionsOp?: 'and' | 'or';
+    timeFrame?: TimeFrame;
+  } | null
+>;
+
 type SpecializedWidget =
   | NetWorthWidget
   | CashFlowWidget
   | SpendingWidget
   | MarkdownWidget
   | SummaryWidget
-  | CalendarWidget;
+  | CalendarWidget
+  | AIAnalysisWidget;
 export type Widget = SpecializedWidget | CustomReportWidget;
 export type NewWidget = Omit<Widget, 'id' | 'tombstone'>;
 
@@ -116,13 +137,3 @@ export type PercentageSummaryContent = {
 };
 
 export type SummaryContent = BaseSummaryContent | PercentageSummaryContent;
-
-export type CalendarWidget = AbstractWidget<
-  'calendar-card',
-  {
-    name?: string;
-    conditions?: RuleConditionEntity[];
-    conditionsOp?: 'and' | 'or';
-    timeFrame?: TimeFrame;
-  } | null
->;

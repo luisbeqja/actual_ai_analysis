@@ -25,6 +25,7 @@ import {
   type ExportImportDashboard,
   type MarkdownWidget,
   type Widget,
+  type AIAnalysisWidget,
 } from 'loot-core/types/models';
 
 import { useAccounts } from '../../hooks/useAccounts';
@@ -45,6 +46,7 @@ import { NetWorthCard } from './reports/NetWorthCard';
 import { SpendingCard } from './reports/SpendingCard';
 import './overview.scss';
 import { SummaryCard } from './reports/SummaryCard';
+import { AIAnalysisCard } from './reports/AIAnalysisCard';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -141,7 +143,7 @@ export function Overview() {
 
     onDispatchSucessNotification(
       t(
-        'Dashboard has been successfully reset to default state. Don’t like what you see? You can always press [ctrl+z](#undo) to undo.',
+        "Dashboard has been successfully reset to default state. Don't like what you see? You can always press [ctrl+z](#undo) to undo.",
       ),
     );
   };
@@ -291,7 +293,7 @@ export function Overview() {
 
     onDispatchSucessNotification(
       t(
-        'Dashboard has been successfully imported. Don’t like what you see? You can always press [ctrl+z](#undo) to undo.',
+        "Dashboard has been successfully imported. Don't like what you see? You can always press [ctrl+z](#undo) to undo.",
       ),
     );
   };
@@ -366,7 +368,12 @@ export function Overview() {
                             return;
                           }
 
-                          onAddWidget(item);
+                          if (item === 'ai_analysis-card') {
+                            onAddWidget<AIAnalysisWidget>(item, null);
+                            return;
+                          }
+
+                          onAddWidget(item as 'net-worth-card' | 'cash-flow-card' | 'spending-card' | 'summary-card' | 'calendar-card');
                         }}
                         items={[
                           {
@@ -392,6 +399,10 @@ export function Overview() {
                           {
                             name: 'calendar-card' as const,
                             text: t('Calendar card'),
+                          },
+                          {
+                            name: 'ai_analysis-card' as const,
+                            text: t('AI analysis card'),
                           },
                           {
                             name: 'custom-report' as const,
@@ -549,6 +560,14 @@ export function Overview() {
                     isEditing={isEditing}
                     meta={item.meta}
                     firstDayOfWeekIdx={firstDayOfWeekIdx}
+                    onMetaChange={newMeta => onMetaChange(item, newMeta)}
+                    onRemove={() => onRemoveWidget(item.i)}
+                  />
+                ) : item.type === 'ai_analysis-card' ? (
+                  <AIAnalysisCard
+                    widgetId={item.i}
+                    isEditing={isEditing}
+                    meta={item.meta}
                     onMetaChange={newMeta => onMetaChange(item, newMeta)}
                     onRemove={() => onRemoveWidget(item.i)}
                   />
