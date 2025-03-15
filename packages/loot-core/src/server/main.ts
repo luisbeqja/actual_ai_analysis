@@ -37,6 +37,7 @@ import * as mappings from './db/mappings';
 import * as encryption from './encryption';
 import { app as filtersApp } from './filters/app';
 import { app as llmApp } from './llm/app';
+import { app as llmApp } from './llm/app';
 import { handleBudgetImport } from './importers';
 import { app } from './main-app';
 import { mutator, runHandler } from './mutators';
