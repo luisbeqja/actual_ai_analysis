@@ -265,6 +265,7 @@ function NetWorthInner({ widget }: NetWorthInnerProps) {
 
         <View style={{ marginTop: 30, userSelect: 'none' }}>
           <Paragraph>
+            <h2>Test</h2>
             <strong>
               <Trans>How is net worth calculated?</Trans>
             </strong>
