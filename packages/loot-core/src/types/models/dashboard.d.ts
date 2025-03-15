@@ -137,3 +137,13 @@ export type PercentageSummaryContent = {
 };
 
 export type SummaryContent = BaseSummaryContent | PercentageSummaryContent;
+
+export type CalendarWidget = AbstractWidget<
+  'calendar-card',
+  {
+    name?: string;
+    conditions?: RuleConditionEntity[];
+    conditionsOp?: 'and' | 'or';
+    timeFrame?: TimeFrame;
+  } | null
+>;
