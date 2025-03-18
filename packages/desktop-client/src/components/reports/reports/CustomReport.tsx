@@ -111,6 +111,8 @@ export function CustomReport() {
   const params = useParams();
   const { data: report, isLoading } = useCustomReport(params.id ?? '');
 
+  console.log(report);
+  console.log(params);
   if (isLoading) {
     return <LoadingIndicator />;
   }

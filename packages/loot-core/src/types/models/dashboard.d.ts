@@ -78,6 +78,16 @@ export type AIAnalysisWidget = AbstractWidget<
     conditions?: RuleConditionEntity[];
     conditionsOp?: 'and' | 'or';
     timeFrame?: TimeFrame;
+    lastAnalysis?: {
+      content: string;
+      timestamp: string;
+      financialData: {
+        totalBalance: number;
+        onBudgetBalance: number;
+        offBudgetBalance: number;
+        accountCount: number;
+      };
+    };
   } | null
 >;
 

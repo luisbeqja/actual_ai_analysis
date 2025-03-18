@@ -14,8 +14,8 @@ export function useLLMConfig() {
     setError(null);
     
     try {
-      const result = await send('llm-get-config');
-      setConfig(result);
+      const result: any = await send('llm-get-config');
+      setConfig(result.config);
     } catch (err) {
       setError('Failed to load LLM configuration');
       console.error('Error loading LLM config:', err);
@@ -28,13 +28,11 @@ export function useLLMConfig() {
   const saveConfig = async (newConfig: LLMConfig) => {
     setIsLoading(true);
     setError(null);
-    try {
-      await send('llm-save-config', { config: newConfig });
-      setConfig(newConfig);
-
-      const response = await sendCatch('llm-save-config', {
+    try {      
+      const response: any = await sendCatch('llm-save-config', {
         config: newConfig,
       });
+      setConfig(response.config);
 
       return true;
     } catch (err) {

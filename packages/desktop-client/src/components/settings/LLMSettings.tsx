@@ -11,11 +11,40 @@ import { View } from '@actual-app/components/view';
 import { useLLMConfig } from 'loot-core/client/data-hooks/llm';
 import { addNotification } from 'loot-core/client/notifications/notificationsSlice';
 import { type LLMConfig, type LLMProvider } from 'loot-core/types/models';
+import { allAccountBalance, onBudgetAccountBalance } from 'loot-core/client/queries';
+import { useSheetValue } from '../spreadsheet/useSheetValue';
+import { useAccounts } from '../../hooks/useAccounts';
+import { type AccountEntity } from 'loot-core/types/models';
 
 import { useDispatch } from '../../redux';
 import { Checkbox, FormField, FormLabel } from '../forms';
 
 import { Setting } from './UI';
+
+// Function to gather financial data for AI analysis
+function gatherFinancialData() {
+  const accounts = useAccounts();
+  const totalBalance = useSheetValue<'account', 'accounts-balance'>({
+    name: 'accounts-balance',
+    query: allAccountBalance().query,
+  });
+  const onBudgetBalance = useSheetValue<'account', 'onbudget-accounts-balance'>({
+    name: 'onbudget-accounts-balance',
+    query: onBudgetAccountBalance().query,
+  });
+
+  return {
+    accounts: accounts.map((account: AccountEntity) => ({
+      name: account.name,
+      offbudget: account.offbudget === 1,
+      closed: account.closed === 1,
+      balance: account.balance_current ?? 0
+    })),
+    totalBalance: totalBalance ?? 0,
+    onBudgetBalance: onBudgetBalance ?? 0,
+    offBudgetBalance: (totalBalance ?? 0) - (onBudgetBalance ?? 0)
+  };
+}
 
 export function LLMSettings() {
   const { t } = useTranslation();
@@ -32,6 +61,7 @@ export function LLMSettings() {
   
   const [isTesting, setIsTesting] = useState(false);
   const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Update local config when the remote config is loaded
   useEffect(() => {
@@ -106,6 +136,38 @@ export function LLMSettings() {
       }
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  // Analyze financial data
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      const financialData = await gatherFinancialData();
+      
+      // Here you would send the financial data to your AI service
+      // This is just a placeholder for the actual implementation
+      console.log('Financial data for analysis:', financialData);
+      
+      dispatch(
+        addNotification({
+          notification: {
+            type: 'message',
+            message: t('Financial analysis completed.'),
+          },
+        }),
+      );
+    } catch (error) {
+      dispatch(
+        addNotification({
+          notification: {
+            type: 'error',
+            message: t('Failed to analyze financial data.'),
+          },
+        }),
+      );
+    } finally {
+      setIsAnalyzing(false);
     }
   };
   
@@ -231,16 +293,23 @@ export function LLMSettings() {
         <Button
           variant="primary"
           onPress={handleSave}
-          isDisabled={!localConfig.apiKey || isTesting}
+          isDisabled={!localConfig.apiKey || isTesting || isAnalyzing}
         >
-          <Trans>Save Configuration</Trans>
+          {isAnalyzing ? t('Analyzing...') : t('Save Configuration')}
         </Button>
 
         <Button
           onPress={handleTest}
-          isDisabled={!localConfig.apiKey || isTesting}
+          isDisabled={!localConfig.apiKey || isTesting || isAnalyzing}
         >
           {isTesting ? t('Testing...') : t('Test Connection')}
+        </Button>
+
+        <Button
+          onPress={handleAnalyze}
+          isDisabled={!localConfig.apiKey || isTesting || isAnalyzing}
+        >
+          {isAnalyzing ? t('Analyzing...') : t('Analyze Finances')}
         </Button>
       </View>
     </Setting>
