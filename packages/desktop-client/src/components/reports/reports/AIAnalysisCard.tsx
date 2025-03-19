@@ -10,6 +10,38 @@ import { type AIAnalysisWidget } from 'loot-core/types/models';
 import { useNavigate } from '../../../hooks/useNavigate';
 import { ReportCard } from '../ReportCard';
 
+function extractSummary(htmlContent: string): { 
+  summary: string;
+  issues: string[];
+  opportunities: string[];
+  positives: string[];
+} {
+  // Create a temporary div to parse the HTML
+  const div = document.createElement('div');
+  div.innerHTML = htmlContent.replace(/^```html|```$/g, '');
+
+  // Extract issues (red text)
+  const issues = Array.from(div.querySelectorAll('.issue')).map(el => el.textContent || '');
+
+  // Extract opportunities (green text)
+  const opportunities = Array.from(div.querySelectorAll('.opportunity')).map(el => el.textContent || '');
+
+  // Extract positives (blue text)
+  const positives = Array.from(div.querySelectorAll('.good')).map(el => el.textContent || '');
+
+  // Get the overview paragraph
+  const overviewParagraph = Array.from(div.querySelectorAll('h2 + p')).find(
+    p => p.previousElementSibling?.textContent === 'Overview'
+  )?.textContent || '';
+
+  return {
+    summary: overviewParagraph,
+    issues,
+    opportunities,
+    positives
+  };
+}
+
 type AIAnalysisCardProps = {
   widgetId: string;
   isEditing: boolean;
@@ -27,6 +59,9 @@ export function AIAnalysisCard({
 }: AIAnalysisCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const analysis = meta?.lastAnalysis?.content;
+  const summary = analysis ? extractSummary(analysis) : null;
 
   const onCardClick = () => {
     if (!isEditing) {
@@ -64,18 +99,32 @@ export function AIAnalysisCard({
               <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 8 }}>
                 {t('Key Insights')}
               </Text>
-                {Array.isArray(meta.lastAnalysis.content) && meta.lastAnalysis.content.map((section: any, index: number) => (
-                <View key={index} style={{ marginBottom: 8 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 4 }}>
-                    {section.title}
+
+              {summary && (
+                <View>
+                  <Text style={{ fontSize: 13, color: theme.pageText, marginBottom: 10 }}>
+                    {summary.summary}
                   </Text>
-                  {section.content.map((line: any, lineIndex: any) => (
-                    <Text key={lineIndex} style={{ fontSize: 12, color: theme.pageTextLight, marginLeft: 8 }}>
-                      {line}
+
+                  {summary.issues.length > 0 && (
+                    <Text style={{ fontSize: 13, color: theme.errorText, marginBottom: 4 }}>
+                      • {summary.issues[0]}
                     </Text>
-                  ))}
+                  )}
+
+                  {summary.opportunities.length > 0 && (
+                    <Text style={{ fontSize: 13, color: theme.noticeTextLight, marginBottom: 4 }}>
+                      • {summary.opportunities[0]}
+                    </Text>
+                  )}
+
+                  {summary.positives.length > 0 && (
+                    <Text style={{ fontSize: 13, color: theme.noticeText, marginBottom: 4 }}>
+                      • {summary.positives[0]}
+                    </Text>
+                  )}
                 </View>
-              ))}
+              )}
             </View>
 
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
