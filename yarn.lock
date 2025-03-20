@@ -30,6 +30,8 @@ __metadata:
     "@types/uuid": "npm:^9.0.8"
     better-sqlite3: "npm:^11.9.1"
     compare-versions: "npm:^6.1.1"
+    better-sqlite3: "npm:^11.9.1"
+    compare-versions: "npm:^6.1.1"
     jest: "npm:^29.7.0"
     node-fetch: "npm:^3.3.2"
     tsc-alias: "npm:^1.8.11"
