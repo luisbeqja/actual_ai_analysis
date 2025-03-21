@@ -11,40 +11,12 @@ import { View } from '@actual-app/components/view';
 import { useLLMConfig } from 'loot-core/client/data-hooks/llm';
 import { addNotification } from 'loot-core/client/notifications/notificationsSlice';
 import { type LLMConfig, type LLMProvider } from 'loot-core/types/models';
-import { allAccountBalance, onBudgetAccountBalance } from 'loot-core/client/queries';
-import { useSheetValue } from '../spreadsheet/useSheetValue';
-import { useAccounts } from '../../hooks/useAccounts';
-import { type AccountEntity } from 'loot-core/types/models';
 
 import { useDispatch } from '../../redux';
 import { Checkbox, FormField, FormLabel } from '../forms';
 
 import { Setting } from './UI';
 
-// Function to gather financial data for AI analysis
-function gatherFinancialData() {
-  const accounts = useAccounts();
-  const totalBalance = useSheetValue<'account', 'accounts-balance'>({
-    name: 'accounts-balance',
-    query: allAccountBalance().query,
-  });
-  const onBudgetBalance = useSheetValue<'account', 'onbudget-accounts-balance'>({
-    name: 'onbudget-accounts-balance',
-    query: onBudgetAccountBalance().query,
-  });
-
-  return {
-    accounts: accounts.map((account: AccountEntity) => ({
-      name: account.name,
-      offbudget: account.offbudget === 1,
-      closed: account.closed === 1,
-      balance: account.balance_current ?? 0
-    })),
-    totalBalance: totalBalance ?? 0,
-    onBudgetBalance: onBudgetBalance ?? 0,
-    offBudgetBalance: (totalBalance ?? 0) - (onBudgetBalance ?? 0)
-  };
-}
 
 export function LLMSettings() {
   const { t } = useTranslation();
@@ -55,7 +27,7 @@ export function LLMSettings() {
     provider: 'openai',
     apiKey: '',
     enabled: false,
-    model: 'gpt-4o',
+    model: '',
     baseUrl: '',
   });
   
@@ -180,30 +152,33 @@ export function LLMSettings() {
         <Select
           options={[
             ['openai', 'OpenAI'],
+            ['ollama', 'Ollama'],
           ]}
           value={localConfig.provider || 'openai'}
           onChange={value => handleChange('provider', value as LLMProvider)}
         />
       </FormField>
 
-      <FormField>
-        <FormLabel title={t('API Key')} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Input
-            type={isApiKeyVisible ? 'text' : 'password'}
-            value={localConfig.apiKey || ''}
-            onChange={e => handleChange('apiKey', e.target.value)}
-            style={{ flex: 1 }}
-            placeholder={t('Enter your API key')}
-          />
-          <Button
-            variant="bare"
-            onPress={() => setIsApiKeyVisible(!isApiKeyVisible)}
-          >
-            {isApiKeyVisible ? t('Hide') : t('Show')}
-          </Button>
-        </View>
-      </FormField>
+      {localConfig.provider === 'openai' && (
+        <FormField>
+          <FormLabel title={t('API Key')} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Input
+              type={isApiKeyVisible ? 'text' : 'password'}
+              value={localConfig.apiKey || ''}
+              onChange={e => handleChange('apiKey', e.target.value)}
+              style={{ flex: 1 }}
+              placeholder={t('Enter your API key')}
+            />
+            <Button
+              variant="bare"
+              onPress={() => setIsApiKeyVisible(!isApiKeyVisible)}
+            >
+              {isApiKeyVisible ? t('Hide') : t('Show')}
+            </Button>
+          </View>
+        </FormField>
+      )}
 
       {localConfig.provider === 'openai' && (
         <FormField>
@@ -211,39 +186,32 @@ export function LLMSettings() {
           <Select
             options={[
               ['gpt-4o', 'GPT-4o'],
-              ['gpt-4-turbo', 'GPT-4 Turbo'],
-              ['gpt-3.5-turbo', 'GPT-3.5 Turbo'],
+              /* TODO: Add other models */
             ]}
             value={localConfig.model || 'gpt-4o'}
             onChange={value => handleChange('model', value)}
           />
         </FormField>
       )}
-
-      {localConfig.provider === 'anthropic' && (
-        <FormField>
-          <FormLabel title={t('Model')} />
-          <Select
-            options={[
-              ['claude-3-opus-20240229', 'Claude 3 Opus'],
-              ['claude-3-sonnet-20240229', 'Claude 3 Sonnet'],
-              ['claude-3-haiku-20240307', 'Claude 3 Haiku'],
-            ]}
-            value={localConfig.model || 'claude-3-haiku-20240307'}
-            onChange={value => handleChange('model', value)}
-          />
-        </FormField>
-      )}
-
-      {localConfig.provider === 'custom' && (
-        <FormField>
-          <FormLabel title={t('Base URL')} />
-          <Input
-            value={localConfig.baseUrl || ''}
-            onChange={e => handleChange('baseUrl', e.target.value)}
-            placeholder={t('Enter the API base URL')}
-          />
-        </FormField>
+      {localConfig.provider === 'ollama' && (
+        <>
+          <FormField>
+            <FormLabel title={t('Base URL')} />
+            <Input
+              value={localConfig.baseUrl || ''}
+              onChange={e => handleChange('baseUrl', e.target.value)}
+              placeholder={t('Default: http://localhost:11434')}
+            />
+          </FormField>
+          <FormField>
+            <FormLabel title={t('Model Name')} />
+            <Input
+              
+              onChange={e => handleChange('model', e.target.value)}
+              placeholder={t('Default: gemma3')}
+            />
+          </FormField>
+        </>
       )}
 
       {localConfig.lastTested && (

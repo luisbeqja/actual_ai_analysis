@@ -15,7 +15,7 @@ export function useLLMConfig() {
     
     try {
       const result: any = await send('llm-get-config');
-      setConfig(result.config);
+      setConfig(result?.config);
     } catch (err) {
       setError('Failed to load LLM configuration');
       console.error('Error loading LLM config:', err);
@@ -32,8 +32,7 @@ export function useLLMConfig() {
       const response: any = await sendCatch('llm-save-config', {
         config: newConfig,
       });
-      setConfig(response.config);
-
+      setConfig(response?.config);
       return true;
     } catch (err) {
       setError('Failed to save LLM configuration');
@@ -45,50 +44,72 @@ export function useLLMConfig() {
   };
 
   const testOpenAIConnection = async (apiKey: string): Promise<LLMTestResult> => {
-      try {
-          // Default API endpoint for a simple test
-          const endpoint = 'https://api.openai.com/v1/models';
+    try {
+      const endpoint = 'https://api.openai.com/v1/models';
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-          // Making a request to the models endpoint
-          const response = await fetch(endpoint, {
-              method: 'GET',
-              headers: {
-                  'Authorization': `Bearer ${apiKey}`,
-                  'Content-Type': 'application/json'
-              }
-          });
-
-          // Check if the response is successful
-          if (!response.ok) {
-              const errorData = await response.json();
-              return {
-                  success: false,
-                  message: `API Error: ${errorData.error?.message || 'Unknown error'}`,
-                  timestamp: new Date().toISOString(),
-              };
-          }
-
-          // Parse the successful response
-          const data = await response.json();
-
-          return {
-              success: true,
-              message: 'Connection successful',
-              timestamp: new Date().toISOString(),
-          };
-      } catch (error) {
-          return {
-              success: false,
-              message: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              timestamp: new Date().toISOString(),
-          };
+      if (!response.ok) {
+        const errorData = await response.json();
+        return {
+          success: false,
+          message: `API Error: ${errorData.error?.message || 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+        };
       }
+
+      return {
+        success: true,
+        message: 'Connection successful',
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  };
+
+  // Test the Ollama connection
+  const testOllamaConnection = async (baseUrl?: string): Promise<LLMTestResult> => {
+    try {
+      const url = baseUrl || 'http://localhost:11434';
+      const endpoint = `${url}/api/tags`;
+      
+      const response = await fetch(endpoint);
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          message: `Failed to connect to Ollama server at ${url}`,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Successfully connected to Ollama server',
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to connect to Ollama server: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
   };
 
   // Test the LLM connection
   const testConnection = async (testConfig?: LLMConfig): Promise<LLMTestResult> => {
     try {
-      // Make sure we're passing the config in the correct format
       const configToTest = testConfig || config;
       if (!configToTest) {
         return {
@@ -98,9 +119,25 @@ export function useLLMConfig() {
         };
       }
 
-      const result = await testOpenAIConnection(configToTest.apiKey);
-      // The result from send() is the direct response from the server
-      return result as LLMTestResult;
+      switch (configToTest.provider) {
+        case 'openai':
+          return await testOpenAIConnection(configToTest.apiKey);
+        case 'ollama':
+          return await testOllamaConnection(configToTest.baseUrl);
+        case 'custom':
+          // For custom providers, we'll need to implement specific testing logic
+          return {
+            success: false,
+            message: 'Testing custom providers is not yet implemented',
+            timestamp: new Date().toISOString(),
+          };
+        default:
+          return {
+            success: false,
+            message: 'Unknown provider',
+            timestamp: new Date().toISOString(),
+          };
+      }
     } catch (err) {
       return {
         success: false,
