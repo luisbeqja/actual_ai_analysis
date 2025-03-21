@@ -16,11 +16,9 @@ import { type AIAnalysisWidget } from 'loot-core/types/models';
 import { allAccountBalance, onBudgetAccountBalance, accountBalance } from 'loot-core/client/queries';
 import { useSheetValue } from '../../spreadsheet/useSheetValue';
 import { useAccounts } from '../../../hooks/useAccounts';
-import { type AccountEntity } from 'loot-core/types/models';
 import { parametrizedField, type Binding } from '../../spreadsheet';
-import { CellValue } from '../../spreadsheet/CellValue';
 import * as queries from 'loot-core/client/queries';
-import { useReport as useCustomReport } from 'loot-core/client/data-hooks/reports';
+
 
 import { useNavigate } from '../../../hooks/useNavigate';
 import { useDispatch } from '../../../redux';
@@ -112,55 +110,83 @@ function AIAnalysisInner({ widget }: AIAnalysisInnerProps) {
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     try {
-      if (config?.apiKey) {
+      if (!config) {
+        throw new Error('No LLM configuration found');
+      }
+
+      const prompt = `
+        Analyze the following financial data and provide insights:
+        this are the data:
+        ${JSON.stringify(financialData)}
+        
+        Please provide a detailed analysis of the financial health and any recommendations.
+        If there are any issues, please highlight them in a red color.
+        If there are any savings opportunities, please highlight them in a green color.
+        If there are any areas that are performing well, please highlight them in a blue color.
+
+        Remember the user already has access to the financial data, so don't repeat it.
+        Your main goal is to help the user understand their financial data and make decisions to improve their financial health.
+
+        Return the analysis in a HTML format, your response should be only the HTML.
+      `;
+
+      let content = '';
+      
+      if (config.provider === 'ollama') {
+        const baseUrl = config.baseUrl || 'http://localhost:11434';
+        const response: any = await fetch(`${baseUrl}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: config.model || 'gemma3',
+            prompt: prompt,
+            stream: false,
+          }),
+        });
+        
+         if (!response.ok) {
+          throw new Error('Failed to get response from Ollama');
+        }
+        
+        const data = await response.json();
+        content = data.response;
+      } else if (config.provider === 'openai' && config.apiKey) {
         const client = new OpenAI({
           apiKey: config.apiKey,
           dangerouslyAllowBrowser: true,
         });
 
-        const prompt = `
-          Analyze the following financial data and provide insights:
-          this are the data:
-          ${JSON.stringify(financialData)}
-          
-          Please provide a detailed analysis of the financial health and any recommendations.
-          If there are any issues, please highlight them in a red color.
-          If there are any savings opportunities, please highlight them in a green color.
-          If there are any areas that are performing well, please highlight them in a blue color.
-
-          Remember the user already has access to the financial data, so don't repeat it.
-          Your main goal is to help the user understand their financial data and make decisions to improve their financial health.
-
-          Return the analysis in a HTML format, your response should be only the HTML.
-          `;
-
         const response = await client.chat.completions.create({
           model: config.model || 'gpt-4',
           messages: [{ role: 'user', content: prompt }],
         });
-        const newAnalysis: AnalysisResult = {
-          content: response.choices[0].message.content ?? '',
-          timestamp: new Date().toISOString(),
-          financialData: {
-            totalBalance: financialData.totalBalance,
-            onBudgetBalance: financialData.onBudgetBalance,
-            offBudgetBalance: financialData.offBudgetBalance,
-            accountCount: financialData.accounts.length
-          }
-        };
+        content = response.choices[0].message.content ?? '';
+      } else {
+        throw new Error('Unsupported LLM provider');
+      }
 
-        setAnalysisResult(newAnalysis);
-
-        // Save the analysis to the widget metadata
-        if (widget) {
-          await send('dashboard-update-widget', {
-            id: widget.id,
-            meta: {
-              ...(widget.meta ?? {}),
-              lastAnalysis: newAnalysis
-            },
-          });
+      const newAnalysis: AnalysisResult = {
+        content,
+        timestamp: new Date().toISOString(),
+        financialData: {
+          totalBalance: financialData.totalBalance,
+          onBudgetBalance: financialData.onBudgetBalance,
+          offBudgetBalance: financialData.offBudgetBalance,
+          accountCount: financialData.accounts.length
         }
+      };
+
+      setAnalysisResult(newAnalysis);
+
+      // Save the analysis to the widget metadata
+      if (widget) {
+        await send('dashboard-update-widget', {
+          id: widget.id,
+          meta: {
+            ...(widget.meta ?? {}),
+            lastAnalysis: newAnalysis
+          },
+        });
       }
     } catch (error) {
       console.error('Error during analysis:', error);
@@ -256,7 +282,7 @@ function AIAnalysisInner({ widget }: AIAnalysisInnerProps) {
           <Button
             variant="primary"
             onPress={handleAnalyze}
-            isDisabled={isAnalyzing || !config?.apiKey}
+            isDisabled={isAnalyzing || !config || (config.provider === 'openai' && !config.apiKey)}
             style={{ marginBottom: 20 }}
           >
             {isAnalyzing ? t('Analyzing...') : t('Analyze Finances')}

@@ -205,6 +205,9 @@ export interface ServerHandlers {
 
   // LLM handlers
   'llm-get-config': () => Promise<LLMConfig | null>;
-  'llm-save-config': (arg: { config: LLMConfig }) => Promise<{ success: boolean }>;
+  'llm-save-config': (arg: { config: LLMConfig }) => Promise<{ success: boolean; config: LLMConfig | null }>;
   'llm-test-connection': (arg: { config: LLMConfig }) => Promise<LLMTestResult>;
+
+  // Dashboard handlers
+  'dashboard-update-widget': (arg: { id: string; meta: any }) => Promise<void>;
 }
