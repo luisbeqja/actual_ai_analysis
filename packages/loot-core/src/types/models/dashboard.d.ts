@@ -61,13 +61,44 @@ export type MarkdownWidget = AbstractWidget<
   { content: string; text_align?: 'left' | 'right' | 'center' }
 >;
 
+export type CalendarWidget = AbstractWidget<
+  'calendar-card',
+  {
+    name?: string;
+    conditions?: RuleConditionEntity[];
+    conditionsOp?: 'and' | 'or';
+    timeFrame?: TimeFrame;
+  } | null
+>;
+
+export type AIAnalysisWidget = AbstractWidget<
+  'ai_analysis-card',
+  {
+    name?: string;
+    conditions?: RuleConditionEntity[];
+    conditionsOp?: 'and' | 'or';
+    timeFrame?: TimeFrame;
+    lastAnalysis?: {
+      content: string;
+      timestamp: string;
+      financialData: {
+        totalBalance: number;
+        onBudgetBalance: number;
+        offBudgetBalance: number;
+        accountCount: number;
+      };
+    };
+  } | null
+>;
+
 type SpecializedWidget =
   | NetWorthWidget
   | CashFlowWidget
   | SpendingWidget
   | MarkdownWidget
   | SummaryWidget
-  | CalendarWidget;
+  | CalendarWidget
+  | AIAnalysisWidget;
 export type Widget = SpecializedWidget | CustomReportWidget;
 export type NewWidget = Omit<Widget, 'id' | 'tombstone'>;
 

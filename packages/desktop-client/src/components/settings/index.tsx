@@ -33,6 +33,7 @@ import { ExperimentalFeatures } from './Experimental';
 import { ExportBudget } from './Export';
 import { FormatSettings } from './Format';
 import { LanguageSettings } from './LanguageSettings';
+import { LLMSettings } from './LLMSettings';
 import { RepairTransactions } from './RepairTransactions';
 import { ResetCache, ResetSync } from './Reset';
 import { ThemeSettings } from './Themes';
@@ -132,10 +133,10 @@ function AdvancedAbout() {
       </Text>
       {/* low priority todo: eliminate some or all of these, or decide when/if to show them */}
       {/* <Text>
-        <IDName>Cloud File ID:</IDName> {prefs.cloudFileId || '(none)'}
+        <IDName>Cloud File ID:</IDName> prefs.cloudFileId || '(none)'}
       </Text>
       <Text>
-        <IDName>User ID:</IDName> {prefs.userId || '(none)'}
+        <IDName>User ID:</IDName> prefs.userId || '(none)'}
       </Text> */}
     </Setting>
   );
@@ -212,6 +213,7 @@ export function Settings() {
           <ResetSync />
           <RepairTransactions />
           <ExperimentalFeatures />
+          <LLMSettings />
         </AdvancedToggle>
       </View>
     </Page>

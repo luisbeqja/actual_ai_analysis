@@ -7,6 +7,7 @@ import { OpenIdConfig } from './models/openid';
 // eslint-disable-next-line import/no-unresolved
 import { Query } from './query';
 import { EmptyObject } from './util';
+import { LLMConfig, LLMTestResult } from './models/llm';
 
 export interface ServerHandlers {
   undo: () => Promise<void>;
@@ -201,4 +202,9 @@ export interface ServerHandlers {
     | { error: string }
     | null
   >;
+
+  // LLM handlers
+  'llm-get-config': () => Promise<LLMConfig | null>;
+  'llm-save-config': (arg: { config: LLMConfig }) => Promise<{ success: boolean }>;
+  'llm-test-connection': (arg: { config: LLMConfig }) => Promise<LLMTestResult>;
 }

@@ -36,6 +36,7 @@ import * as db from './db';
 import * as mappings from './db/mappings';
 import * as encryption from './encryption';
 import { app as filtersApp } from './filters/app';
+import { app as llmApp } from './llm/app';
 import { handleBudgetImport } from './importers';
 import { app } from './main-app';
 import { mutator, runHandler } from './mutators';
@@ -65,6 +66,7 @@ import { app as toolsApp } from './tools/app';
 import { app as transactionsApp } from './transactions/app';
 import * as rules from './transactions/transaction-rules';
 import { clearUndo, undo, redo } from './undo';
+import * as llm from './llm/app';
 import { updateVersion } from './update';
 import {
   uniqueBudgetName,
@@ -1106,6 +1108,7 @@ app.combine(
   accountsApp,
   payeesApp,
   spreadsheetApp,
+  llmApp
 );
 
 export function getDefaultDocumentDir() {

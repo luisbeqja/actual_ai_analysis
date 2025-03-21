@@ -90,5 +90,8 @@
   "browserslist": [
     "electron 24.0",
     "defaults"
-  ]
+  ],
+  "dependencies": {
+    "openai": "^4.87.3"
+  }
 }
