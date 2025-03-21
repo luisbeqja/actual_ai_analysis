@@ -12,16 +12,15 @@ export async function init() {
 }
 
 // Save LLM configuration
-export async function saveLLMConfig(config: LLMConfig) {
-try {
+export async function saveLLMConfig({ config }: { config: LLMConfig }) {
+  try {
     const configJson = JSON.stringify(config);
     
     // Check if the preference already exists
     const existingPref = await db.first(
       'SELECT id FROM preferences WHERE id = ?',
       [LLM_CONFIG_KEY]
-    );
-    
+    );    
     if (existingPref) {
       // Update existing preference
       await db.run(
@@ -35,10 +34,10 @@ try {
         [LLM_CONFIG_KEY, configJson]
       );
     }
+    return { success: true, config };
   } catch (error) {
-    console.error('Error saving LLM config:', error);
+    return { success: false, config: null };
   }
-  console.log('config', config);
 }
 
 // Get LLM configuration
@@ -48,27 +47,22 @@ export async function getLLMConfig() {
       'SELECT value FROM preferences WHERE id = ?',
       [LLM_CONFIG_KEY]
     );
-    
     if (!result) {
-      return null;
+      return { success: true, config: null };
     }
-    
-    return JSON.parse(result.value);
+    return { success: true, config: JSON.parse(result.value) };
   } catch (error) {
-    console.error('Error getting LLM config:', error);
-    return null;
+    return { success: false, config: null };
   }
 } 
 
 // Define the handlers interface
 interface LLMHandlers {
-  'llm-save-config': (config: LLMConfig) => Promise<void>;
-  'llm-get-config': () => Promise<LLMConfig>;
+  'llm-save-config': (arg: { config: LLMConfig }) => Promise<{ success: boolean; config: LLMConfig | null }>;
+  'llm-get-config': () => Promise<{ success: boolean; config: LLMConfig | null }>;
 }
 
-
 export const app = createApp<LLMHandlers>();
-
 
 app.method('llm-save-config', mutator(saveLLMConfig));
 app.method('llm-get-config', mutator(getLLMConfig));

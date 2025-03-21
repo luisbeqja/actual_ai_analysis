@@ -89,7 +89,6 @@ export function LLMSettings() {
   // Save configuration
   const handleSave = async () => {
     const success = await saveConfig(localConfig);
-    
     if (success) {
       dispatch(
         addNotification({
@@ -136,38 +135,6 @@ export function LLMSettings() {
       }
     } finally {
       setIsTesting(false);
-    }
-  };
-
-  // Analyze financial data
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true);
-    try {
-      const financialData = await gatherFinancialData();
-      
-      // Here you would send the financial data to your AI service
-      // This is just a placeholder for the actual implementation
-      console.log('Financial data for analysis:', financialData);
-      
-      dispatch(
-        addNotification({
-          notification: {
-            type: 'message',
-            message: t('Financial analysis completed.'),
-          },
-        }),
-      );
-    } catch (error) {
-      dispatch(
-        addNotification({
-          notification: {
-            type: 'error',
-            message: t('Failed to analyze financial data.'),
-          },
-        }),
-      );
-    } finally {
-      setIsAnalyzing(false);
     }
   };
   
@@ -303,13 +270,6 @@ export function LLMSettings() {
           isDisabled={!localConfig.apiKey || isTesting || isAnalyzing}
         >
           {isTesting ? t('Testing...') : t('Test Connection')}
-        </Button>
-
-        <Button
-          onPress={handleAnalyze}
-          isDisabled={!localConfig.apiKey || isTesting || isAnalyzing}
-        >
-          {isAnalyzing ? t('Analyzing...') : t('Analyze Finances')}
         </Button>
       </View>
     </Setting>

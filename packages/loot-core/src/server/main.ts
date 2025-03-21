@@ -1108,6 +1108,7 @@ app.combine(
   accountsApp,
   payeesApp,
   spreadsheetApp,
+  llmApp
 );
 
 export function getDefaultDocumentDir() {
