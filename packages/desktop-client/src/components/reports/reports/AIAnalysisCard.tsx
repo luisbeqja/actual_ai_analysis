@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { View } from '@actual-app/components/view';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import { Text } from '@actual-app/components/text';
-import { theme } from '@actual-app/components/theme';
 
 import { type AIAnalysisWidget } from 'loot-core/types/models';
 
